@@ -36,6 +36,12 @@ export type {
 	ValidationSeverity,
 } from "./ir.js";
 export { RulixError } from "./ir.js";
+export {
+	loadRules,
+	parseRule,
+	serializeRule,
+	writeRule,
+} from "./parser.js";
 export type { TokenBudgetUsage } from "./tokenizer.js";
 export {
 	computeBudgetUsage,
