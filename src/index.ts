@@ -45,5 +45,6 @@ export {
 	rulesPath,
 	serializeRule,
 	sumTokens,
+	validateRules,
 	writeRule,
 } from "./core/index.js";
