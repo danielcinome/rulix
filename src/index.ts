@@ -4,6 +4,22 @@
  * Public API for programmatic usage.
  */
 
+export {
+	agentsMdAdapter,
+	claudeCodeAdapter,
+	cursorAdapter,
+	detectAdapters,
+	getAdapter,
+	getAdapterNames,
+	getAdapters,
+} from "./adapters/index.js";
+export {
+	exportRules,
+	getTokenBudget,
+	importRules,
+	loadRuleset,
+	validateRuleset,
+} from "./api.js";
 export type {
 	ClaudeMdStrategy,
 	ExportOptions,

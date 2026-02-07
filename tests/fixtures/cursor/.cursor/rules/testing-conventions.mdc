@@ -1,0 +1,10 @@
+---
+description: "Testing conventions for test files"
+globs: ["**/*.test.ts", "**/*.spec.ts"]
+---
+
+# Testing
+
+- Use `describe`/`it` blocks for structure
+- One assertion per test when possible
+- Name tests with "should" pattern

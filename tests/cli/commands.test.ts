@@ -2,13 +2,13 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initCommand } from "../../src/cli/commands/init.js";
 import { importCommand } from "../../src/cli/commands/import.js";
+import { initCommand } from "../../src/cli/commands/init.js";
+import { statusCommand } from "../../src/cli/commands/status.js";
 import { syncCommand } from "../../src/cli/commands/sync.js";
 import { validateCommand } from "../../src/cli/commands/validate.js";
-import { statusCommand } from "../../src/cli/commands/status.js";
-import { writeRule } from "../../src/core/parser.js";
 import type { Rule } from "../../src/core/ir.js";
+import { writeRule } from "../../src/core/parser.js";
 
 let tmpDir: string;
 
@@ -43,10 +43,7 @@ describe("initCommand", () => {
 	it("creates .rulix directory structure", async () => {
 		await initCommand(tmpDir);
 
-		const config = await readFile(
-			join(tmpDir, ".rulix/config.json"),
-			"utf-8",
-		);
+		const config = await readFile(join(tmpDir, ".rulix/config.json"), "utf-8");
 		expect(JSON.parse(config)).toHaveProperty("targets");
 	});
 

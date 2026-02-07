@@ -1,0 +1,11 @@
+{
+	"targets": ["cursor", "claude-code", "agents-md"],
+	"presets": [],
+	"overrides": {},
+	"options": {
+		"tokenEstimation": "heuristic",
+		"agentsMdHeader": true,
+		"claudeMdStrategy": "concatenate",
+		"syncOnSave": false
+	}
+}
