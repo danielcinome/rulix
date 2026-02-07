@@ -22,9 +22,16 @@ export type {
 	RulixConfig,
 	RulixConfigOptions,
 	TokenBudget,
+	TokenBudgetUsage,
 	TokenEstimation,
 	ValidationIssue,
 	ValidationResult,
 	ValidationSeverity,
 } from "./core/index.js";
-export { RulixError } from "./core/index.js";
+export {
+	computeBudgetUsage,
+	estimateRuleTokens,
+	estimateTokens,
+	RulixError,
+	sumTokens,
+} from "./core/index.js";
