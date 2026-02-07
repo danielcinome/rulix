@@ -1,35 +1,67 @@
 {
-  "name": "rulix",
-  "version": "1.0.0",
-  "description": "> One ruleset. Every AI coding tool.",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/danielcinome/rulix.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/danielcinome/rulix/issues"
-  },
-  "homepage": "https://github.com/danielcinome/rulix#readme",
-  "dependencies": {
-    "picomatch": "^4.0.3"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.14",
-    "@changesets/cli": "^2.29.8",
-    "@types/node": "^25.2.1",
-    "@types/picomatch": "^4.0.2",
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
-  }
+	"name": "rulix",
+	"version": "0.1.0",
+	"description": "One ruleset. Every AI coding tool.",
+	"type": "module",
+	"bin": {
+		"rulix": "./dist/cli/index.js"
+	},
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"typecheck": "tsc --noEmit"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/danielcinome/rulix.git"
+	},
+	"keywords": [
+		"ai",
+		"coding-rules",
+		"cursor",
+		"claude",
+		"agents-md",
+		"cli"
+	],
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/danielcinome/rulix/issues"
+	},
+	"homepage": "https://github.com/danielcinome/rulix#readme",
+	"engines": {
+		"node": ">=22"
+	},
+	"dependencies": {
+		"picomatch": "^4.0.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.14",
+		"@changesets/cli": "^2.29.8",
+		"@types/node": "^25.2.1",
+		"@types/picomatch": "^4.0.2",
+		"tsup": "^8.5.1",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	}
 }

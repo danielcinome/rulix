@@ -33,3 +33,8 @@ npm-debug.log*
 tmp/
 temp/
 *.tmp
+
+# AI coding rules
+AGENTS.md
+CLAUDE.md
+.cursor/rules/
