@@ -29,9 +29,17 @@ export type {
 	ValidationSeverity,
 } from "./core/index.js";
 export {
+	CONFIG_FILENAME,
 	computeBudgetUsage,
+	configPath,
+	createDefaultConfig,
 	estimateRuleTokens,
 	estimateTokens,
+	loadConfig,
+	RULES_DIR,
+	RULIX_DIR,
 	RulixError,
+	resolveConfig,
+	rulesPath,
 	sumTokens,
 } from "./core/index.js";
