@@ -228,6 +228,10 @@ Contributions are welcome! The most impactful ways to help:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines, and [Writing an Adapter](docs/adapters.md) for the adapter guide.
 
+## Author
+
+**Daniel Chinome** — [@danielcinome](https://github.com/danielcinome)
+
 ## License
 
 [MIT](LICENSE)
