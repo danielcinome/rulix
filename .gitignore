@@ -33,3 +33,14 @@ npm-debug.log*
 tmp/
 temp/
 *.tmp
+
+# AI coding rules (generated output — not source of truth)
+AGENTS.md
+CLAUDE.md
+.cursor/rules/
+.claude/rules/
+
+# But keep test fixtures
+!tests/fixtures/**/CLAUDE.md
+!tests/fixtures/**/.cursor/
+!tests/fixtures/**/.claude/

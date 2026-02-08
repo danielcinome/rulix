@@ -1,0 +1,7 @@
+---
+description: "Security guidelines for sensitive code"
+---
+
+- Validate all user input
+- Use parameterized queries
+- Never log secrets or tokens
