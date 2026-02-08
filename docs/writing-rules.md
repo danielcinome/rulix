@@ -165,6 +165,6 @@ priority: 3
 
 | Rulix scope | Cursor | Claude Code | AGENTS.md |
 |---|---|---|---|
-| `always` | `alwaysApply: true` | Section in `CLAUDE.md` | Included |
-| `file-scoped` | `globs` in frontmatter | `.claude/rules/*.md` with `paths` | Included |
-| `agent-selected` | `description` only | `## Context: X` in `CLAUDE.md` | Excluded |
+| `always` | `alwaysApply: true` | `.claude/rules/*.md` (no frontmatter) | Included |
+| `file-scoped` | `globs` in frontmatter | `.claude/rules/*.md` with `paths:` | Included |
+| `agent-selected` | `description` only | `.claude/rules/*.md` with `description:` | Included |

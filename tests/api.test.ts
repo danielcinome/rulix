@@ -145,17 +145,17 @@ describe("getTokenBudget", () => {
 		const usage = getTokenBudget("claude-code", rules);
 
 		expect(usage.used).toBe(500);
-		expect(usage.max).toBe(2_000);
-		expect(usage.percentage).toBe(25);
+		expect(usage.max).toBe(4_000);
+		expect(usage.percentage).toBe(12.5);
 		expect(usage.exceeded).toBe(false);
 	});
 
 	it("detects exceeded budget", () => {
-		const rules = [makeRule({ estimatedTokens: 3_000 })];
+		const rules = [makeRule({ estimatedTokens: 5_000 })];
 		const usage = getTokenBudget("claude-code", rules);
 
 		expect(usage.exceeded).toBe(true);
-		expect(usage.percentage).toBe(150);
+		expect(usage.percentage).toBe(125);
 	});
 
 	it("throws for unknown adapter", () => {

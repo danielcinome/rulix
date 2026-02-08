@@ -35,7 +35,7 @@ Before writing code, document:
 Create `src/adapters/<tool-name>.ts`. Follow the existing adapters as reference:
 
 - `cursor.ts` — full import/export with frontmatter parsing
-- `claude-code.ts` — import/export with H2 section splitting
+- `claude-code.ts` — import/export with `.claude/rules/` individual files
 - `agents-md.ts` — export-only adapter
 
 Every adapter should:
@@ -119,7 +119,6 @@ Return the tool's known limits:
 getTokenBudget(): TokenBudget {
   return {
     maxTokens: 10_000,
-    maxInstructions: 500,
     warningThreshold: 0.8,
     source: "Tool documentation",
   };
@@ -183,5 +182,5 @@ Study the existing adapters for patterns:
 | Adapter | Key patterns |
 |---|---|
 | `cursor.ts` | Frontmatter parsing, scope detection from fields, `.mdc` format |
-| `claude-code.ts` | H2 section splitting, `Context:` prefix, dual output (CLAUDE.md + .claude/rules/) |
+| `claude-code.ts` | `.claude/rules/` individual files, `description:` frontmatter for agent-selected, `paths:` for file-scoped |
 | `agents-md.ts` | Export-only, category grouping, priority ordering |

@@ -45,7 +45,6 @@ describe("createDefaultConfig", () => {
 		const config = createDefaultConfig();
 		expect(config.options.tokenEstimation).toBe("heuristic");
 		expect(config.options.agentsMdHeader).toBe(true);
-		expect(config.options.claudeMdStrategy).toBe("concatenate");
 		expect(config.options.syncOnSave).toBe(false);
 	});
 });
@@ -120,13 +119,6 @@ describe("resolveConfig", () => {
 			expect(result.ok).toBe(false);
 		});
 
-		it("rejects invalid claudeMdStrategy", () => {
-			const result = resolveConfig({
-				options: { claudeMdStrategy: "invalid" },
-			});
-			expect(result.ok).toBe(false);
-		});
-
 		it("rejects non-boolean agentsMdHeader", () => {
 			const result = resolveConfig({ options: { agentsMdHeader: "yes" } });
 			expect(result.ok).toBe(false);
@@ -152,15 +144,6 @@ describe("resolveConfig", () => {
 			expect(result.ok).toBe(true);
 			if (!result.ok) return;
 			expect(result.value.options.tokenEstimation).toBe("tiktoken");
-		});
-
-		it("accepts reference claudeMdStrategy", () => {
-			const result = resolveConfig({
-				options: { claudeMdStrategy: "reference" },
-			});
-			expect(result.ok).toBe(true);
-			if (!result.ok) return;
-			expect(result.value.options.claudeMdStrategy).toBe("reference");
 		});
 	});
 });

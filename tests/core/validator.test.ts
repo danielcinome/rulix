@@ -232,6 +232,81 @@ describe("V010 — long content", () => {
 	});
 });
 
+// ─── V011: Cursor Line Limit ─────────────────────────────────────
+
+describe("V011 — Cursor line limit", () => {
+	it("warns when rule exceeds 50 lines and cursor is a target", () => {
+		const longContent = Array.from(
+			{ length: 51 },
+			(_, i) => `Line ${i + 1}`,
+		).join("\n");
+		const result = validateRules(
+			[makeRule({ content: longContent })],
+			["cursor"],
+		);
+		expect(result.warnings.some((w) => w.code === "V011")).toBe(true);
+	});
+
+	it("does not warn when cursor is not a target", () => {
+		const longContent = Array.from(
+			{ length: 51 },
+			(_, i) => `Line ${i + 1}`,
+		).join("\n");
+		const result = validateRules(
+			[makeRule({ content: longContent })],
+			["claude-code"],
+		);
+		const v011 = result.warnings.filter((w) => w.code === "V011");
+		expect(v011).toHaveLength(0);
+	});
+
+	it("does not warn when no targets provided", () => {
+		const longContent = Array.from(
+			{ length: 51 },
+			(_, i) => `Line ${i + 1}`,
+		).join("\n");
+		const result = validateRules([makeRule({ content: longContent })]);
+		const v011 = result.warnings.filter((w) => w.code === "V011");
+		expect(v011).toHaveLength(0);
+	});
+
+	it("does not warn when content is within limit", () => {
+		const content = Array.from({ length: 50 }, (_, i) => `Line ${i + 1}`).join(
+			"\n",
+		);
+		const result = validateRules([makeRule({ content })], ["cursor"]);
+		const v011 = result.warnings.filter((w) => w.code === "V011");
+		expect(v011).toHaveLength(0);
+	});
+});
+
+// ─── V012: Total Token Budget ────────────────────────────────────
+
+describe("V012 — total token budget", () => {
+	it("emits info when total tokens exceed 4000", () => {
+		const result = validateRules([
+			makeRule({ id: "a", estimatedTokens: 2500 }),
+			makeRule({ id: "b", estimatedTokens: 2000 }),
+		]);
+		expect(result.info.some((i) => i.code === "V012")).toBe(true);
+	});
+
+	it("does not emit info when total tokens are within budget", () => {
+		const result = validateRules([
+			makeRule({ id: "a", estimatedTokens: 1000 }),
+			makeRule({ id: "b", estimatedTokens: 1000 }),
+		]);
+		const v012 = result.info.filter((i) => i.code === "V012");
+		expect(v012).toHaveLength(0);
+	});
+
+	it("does not emit for empty rules", () => {
+		const result = validateRules([]);
+		const v012 = result.info.filter((i) => i.code === "V012");
+		expect(v012).toHaveLength(0);
+	});
+});
+
 // ─── Result Structure ────────────────────────────────────────────
 
 describe("ValidationResult structure", () => {

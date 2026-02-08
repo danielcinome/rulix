@@ -47,101 +47,14 @@ describe("detect", () => {
 	});
 });
 
-// ─── import: CLAUDE.md ───────────────────────────────────────────
-
-describe("import CLAUDE.md", () => {
-	it("returns empty rules when CLAUDE.md does not exist", async () => {
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(0);
-	});
-
-	it("imports CLAUDE.md without H2 headers as single rule", async () => {
-		await writeFile(
-			join(tmpDir, "CLAUDE.md"),
-			"Use strict TypeScript.\nNo any types.\n",
-		);
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(1);
-		expect(result.rules[0]?.id).toBe("claude-md");
-		expect(result.rules[0]?.scope).toBe("always");
-		expect(result.rules[0]?.content).toContain("strict TypeScript");
-	});
-
-	it("splits CLAUDE.md by H2 headers into multiple rules", async () => {
-		await writeFile(
-			join(tmpDir, "CLAUDE.md"),
-			`## TypeScript
-
-Use strict mode.
-
-## Testing
-
-Use vitest.
-`,
-		);
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(2);
-		expect(result.rules[0]?.id).toBe("typescript");
-		expect(result.rules[0]?.description).toBe("TypeScript");
-		expect(result.rules[1]?.id).toBe("testing");
-	});
-
-	it("extracts preamble before first H2 as separate rule", async () => {
-		await writeFile(
-			join(tmpDir, "CLAUDE.md"),
-			`# Project Instructions
-
-General setup info.
-
-## Code Style
-
-Use tabs.
-`,
-		);
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(2);
-		expect(result.rules[0]?.id).toBe("claude-md-preamble");
-		expect(result.rules[0]?.content).toContain("General setup info");
-		expect(result.rules[1]?.id).toBe("code-style");
-	});
-
-	it("recognizes Context: prefix as agent-selected scope", async () => {
-		await writeFile(
-			join(tmpDir, "CLAUDE.md"),
-			`## Context: Security Guidelines
-
-Validate all inputs.
-`,
-		);
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(1);
-		expect(result.rules[0]?.scope).toBe("agent-selected");
-		expect(result.rules[0]?.description).toBe("Security Guidelines");
-	});
-
-	it("skips empty CLAUDE.md", async () => {
-		await writeFile(join(tmpDir, "CLAUDE.md"), "");
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(0);
-	});
-
-	it("sets source metadata on imported rules", async () => {
-		await writeFile(join(tmpDir, "CLAUDE.md"), "Some content here.");
-
-		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules[0]?.source?.adapter).toBe("claude-code");
-		expect(result.rules[0]?.source?.filePath).toBe("CLAUDE.md");
-	});
-});
-
 // ─── import: .claude/rules/ ─────────────────────────────────────
 
 describe("import .claude/rules/", () => {
+	it("returns empty rules when directory does not exist", async () => {
+		const result = await claudeCodeAdapter.import(tmpDir);
+		expect(result.rules).toHaveLength(0);
+	});
+
 	it("imports rule file with paths: frontmatter as file-scoped", async () => {
 		const dir = join(tmpDir, ".claude/rules");
 		await mkdir(dir, { recursive: true });
@@ -189,7 +102,27 @@ Content.
 		expect(result.rules[0]?.globs).toBeUndefined();
 	});
 
-	it("derives description from filename", async () => {
+	it("imports rule file with description: frontmatter as agent-selected", async () => {
+		const dir = join(tmpDir, ".claude/rules");
+		await mkdir(dir, { recursive: true });
+		await writeFile(
+			join(dir, "security.md"),
+			`---
+description: "Security guidelines for auth code"
+---
+
+Validate all inputs.
+`,
+		);
+
+		const result = await claudeCodeAdapter.import(tmpDir);
+		expect(result.rules[0]?.scope).toBe("agent-selected");
+		expect(result.rules[0]?.description).toBe(
+			"Security guidelines for auth code",
+		);
+	});
+
+	it("derives description from filename for always-scoped rules", async () => {
 		const dir = join(tmpDir, ".claude/rules");
 		await mkdir(dir, { recursive: true });
 		await writeFile(join(dir, "my-coding-style.md"), "Content here.");
@@ -197,86 +130,49 @@ Content.
 		const result = await claudeCodeAdapter.import(tmpDir);
 		expect(result.rules[0]?.description).toBe("my coding style");
 	});
-});
 
-// ─── import: combined ────────────────────────────────────────────
-
-describe("import combined", () => {
-	it("imports from both CLAUDE.md and .claude/rules/", async () => {
-		await writeFile(join(tmpDir, "CLAUDE.md"), "Global rules.");
-		const dir = join(tmpDir, ".claude/rules");
-		await mkdir(dir, { recursive: true });
+	it("does not import from CLAUDE.md", async () => {
 		await writeFile(
-			join(dir, "scoped.md"),
-			`---
-paths: "**/*.ts"
----
-
-Scoped content.
-`,
+			join(tmpDir, "CLAUDE.md"),
+			"## TypeScript\n\nUse strict mode.\n",
 		);
 
 		const result = await claudeCodeAdapter.import(tmpDir);
-		expect(result.rules).toHaveLength(2);
+		expect(result.rules).toHaveLength(0);
+	});
+
+	it("sets source metadata on imported rules", async () => {
+		const dir = join(tmpDir, ".claude/rules");
+		await mkdir(dir, { recursive: true });
+		await writeFile(join(dir, "rule.md"), "Content here.");
+
+		const result = await claudeCodeAdapter.import(tmpDir);
+		expect(result.rules[0]?.source?.adapter).toBe("claude-code");
+		expect(result.rules[0]?.source?.filePath).toContain(
+			".claude/rules/rule.md",
+		);
 	});
 });
 
 // ─── export ──────────────────────────────────────────────────────
 
 describe("export", () => {
-	it("writes always rules to CLAUDE.md", async () => {
+	it("writes always rules to .claude/rules/ without frontmatter", async () => {
 		const rules = [
 			makeRule({ id: "rule-a", description: "Rule A", content: "Do A." }),
-			makeRule({ id: "rule-b", description: "Rule B", content: "Do B." }),
 		];
 		const result = await claudeCodeAdapter.export(rules, tmpDir);
 
-		expect(result.filesWritten).toContain("CLAUDE.md");
-		const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-		expect(content).toContain("## Rule A");
-		expect(content).toContain("Do A.");
-		expect(content).toContain("## Rule B");
+		expect(result.filesWritten).toContain(".claude/rules/rule-a.md");
+		const content = await readFile(
+			join(tmpDir, ".claude/rules/rule-a.md"),
+			"utf-8",
+		);
+		expect(content).toBe("Do A.\n");
+		expect(content).not.toContain("---");
 	});
 
-	it("orders rules by priority in CLAUDE.md", async () => {
-		const rules = [
-			makeRule({
-				id: "low",
-				description: "Low",
-				content: "Low priority.",
-				priority: 5,
-			}),
-			makeRule({
-				id: "high",
-				description: "High",
-				content: "High priority.",
-				priority: 1,
-			}),
-		];
-		await claudeCodeAdapter.export(rules, tmpDir);
-
-		const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-		const highIdx = content.indexOf("## High");
-		const lowIdx = content.indexOf("## Low");
-		expect(highIdx).toBeLessThan(lowIdx);
-	});
-
-	it("exports agent-selected rules with Context: prefix", async () => {
-		const rules = [
-			makeRule({
-				id: "security",
-				scope: "agent-selected",
-				description: "Security Review",
-				content: "Validate inputs.",
-			}),
-		];
-		await claudeCodeAdapter.export(rules, tmpDir);
-
-		const content = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8");
-		expect(content).toContain("## Context: Security Review");
-	});
-
-	it("writes file-scoped rules to .claude/rules/ with paths:", async () => {
+	it("writes file-scoped rules with paths: frontmatter", async () => {
 		const rules = [
 			makeRule({
 				id: "test-rules",
@@ -315,18 +211,43 @@ describe("export", () => {
 		expect(content).toContain('paths: ["**/*.test.ts", "**/*.spec.ts"]');
 	});
 
-	it("does not write CLAUDE.md when no always/agent-selected rules", async () => {
+	it("writes agent-selected rules with description: frontmatter", async () => {
 		const rules = [
 			makeRule({
-				id: "scoped",
-				scope: "file-scoped",
-				content: "Content.",
-				globs: ["**/*.ts"],
+				id: "security",
+				scope: "agent-selected",
+				description: "Security Review",
+				content: "Validate inputs.",
+			}),
+		];
+		const result = await claudeCodeAdapter.export(rules, tmpDir);
+
+		expect(result.filesWritten).toContain(".claude/rules/security.md");
+		const content = await readFile(
+			join(tmpDir, ".claude/rules/security.md"),
+			"utf-8",
+		);
+		expect(content).toContain('description: "Security Review"');
+		expect(content).toContain("Validate inputs.");
+	});
+
+	it("never generates CLAUDE.md", async () => {
+		const rules = [
+			makeRule({ id: "rule-a", description: "Rule A", content: "Do A." }),
+			makeRule({
+				id: "rule-b",
+				scope: "agent-selected",
+				description: "Rule B",
+				content: "Do B.",
 			}),
 		];
 		const result = await claudeCodeAdapter.export(rules, tmpDir);
 
 		expect(result.filesWritten).not.toContain("CLAUDE.md");
+		const exists = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8").catch(
+			() => null,
+		);
+		expect(exists).toBeNull();
 	});
 
 	it("deletes stale .claude/rules/ files in overwrite mode", async () => {
@@ -334,14 +255,7 @@ describe("export", () => {
 		await mkdir(dir, { recursive: true });
 		await writeFile(join(dir, "old-rule.md"), "old content");
 
-		const rules = [
-			makeRule({
-				id: "new-rule",
-				scope: "file-scoped",
-				content: "New.",
-				globs: ["**/*.ts"],
-			}),
-		];
+		const rules = [makeRule({ id: "new-rule" })];
 		const result = await claudeCodeAdapter.export(rules, tmpDir, {
 			strategy: "overwrite",
 		});
@@ -355,14 +269,7 @@ describe("export", () => {
 		await mkdir(dir, { recursive: true });
 		await writeFile(join(dir, "existing.md"), "existing content");
 
-		const rules = [
-			makeRule({
-				id: "new-rule",
-				scope: "file-scoped",
-				content: "New.",
-				globs: ["**/*.ts"],
-			}),
-		];
+		const rules = [makeRule({ id: "new-rule" })];
 		const result = await claudeCodeAdapter.export(rules, tmpDir, {
 			strategy: "merge",
 		});
@@ -378,10 +285,33 @@ describe("export", () => {
 		});
 
 		expect(result.filesWritten).toHaveLength(1);
-		const exists = await readFile(join(tmpDir, "CLAUDE.md"), "utf-8").catch(
-			() => null,
-		);
+		const exists = await readFile(
+			join(tmpDir, ".claude/rules/dry.md"),
+			"utf-8",
+		).catch(() => null);
 		expect(exists).toBeNull();
+	});
+
+	it("exports all scopes to .claude/rules/", async () => {
+		const rules = [
+			makeRule({ id: "always-rule", scope: "always" }),
+			makeRule({
+				id: "scoped-rule",
+				scope: "file-scoped",
+				globs: ["**/*.ts"],
+			}),
+			makeRule({
+				id: "agent-rule",
+				scope: "agent-selected",
+				description: "Agent rule",
+			}),
+		];
+		const result = await claudeCodeAdapter.export(rules, tmpDir);
+
+		expect(result.filesWritten).toHaveLength(3);
+		expect(result.filesWritten).toContain(".claude/rules/always-rule.md");
+		expect(result.filesWritten).toContain(".claude/rules/scoped-rule.md");
+		expect(result.filesWritten).toContain(".claude/rules/agent-rule.md");
 	});
 });
 
@@ -390,8 +320,7 @@ describe("export", () => {
 describe("getTokenBudget", () => {
 	it("returns Claude Code token budget", () => {
 		const budget = claudeCodeAdapter.getTokenBudget();
-		expect(budget.maxTokens).toBe(2_000);
-		expect(budget.maxInstructions).toBe(150);
+		expect(budget.maxTokens).toBe(4_000);
 		expect(budget.warningThreshold).toBe(0.8);
 	});
 });
@@ -411,7 +340,6 @@ describe("round-trip: export then import", () => {
 
 		expect(result.rules).toHaveLength(1);
 		expect(result.rules[0]?.scope).toBe("always");
-		expect(result.rules[0]?.description).toBe("Round Trip Test");
 		expect(result.rules[0]?.content).toBe("Do this.");
 	});
 

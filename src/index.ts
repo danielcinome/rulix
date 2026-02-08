@@ -21,7 +21,6 @@ export {
 	validateRuleset,
 } from "./api.js";
 export type {
-	ClaudeMdStrategy,
 	ExportOptions,
 	ExportResult,
 	ExportStrategy,
