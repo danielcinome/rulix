@@ -1,6 +1,6 @@
 {
 	"name": "rulix",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "One ruleset. Every AI coding tool.",
 	"type": "module",
 	"bin": {
@@ -43,7 +43,7 @@
 		"agents-md",
 		"cli"
 	],
-	"author": "",
+	"author": "Daniel Chinome",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/danielcinome/rulix/issues"

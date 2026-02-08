@@ -12,7 +12,7 @@ body:
     attributes:
       label: Rulix Version
       description: Run `rulix --version`
-      placeholder: "0.1.0"
+      placeholder: "0.1.1"
     validations:
       required: true
 
