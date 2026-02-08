@@ -7,7 +7,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
-	ClaudeMdStrategy,
 	Result,
 	Rule,
 	RulixConfig,
@@ -23,7 +22,6 @@ export const RULES_DIR = "rules";
 const DEFAULT_OPTIONS: RulixConfigOptions = {
 	tokenEstimation: "heuristic",
 	agentsMdHeader: true,
-	claudeMdStrategy: "concatenate",
 	syncOnSave: false,
 };
 
@@ -74,15 +72,6 @@ function resolveOptions(raw: unknown): Result<RulixConfigOptions> {
 		);
 	}
 	if (
-		raw.claudeMdStrategy !== undefined &&
-		raw.claudeMdStrategy !== "concatenate" &&
-		raw.claudeMdStrategy !== "reference"
-	) {
-		return configError(
-			'"options.claudeMdStrategy" must be "concatenate" or "reference"',
-		);
-	}
-	if (
 		raw.agentsMdHeader !== undefined &&
 		typeof raw.agentsMdHeader !== "boolean"
 	) {
@@ -101,9 +90,6 @@ function resolveOptions(raw: unknown): Result<RulixConfigOptions> {
 			agentsMdHeader:
 				(raw.agentsMdHeader as boolean | undefined) ??
 				DEFAULT_OPTIONS.agentsMdHeader,
-			claudeMdStrategy:
-				(raw.claudeMdStrategy as ClaudeMdStrategy | undefined) ??
-				DEFAULT_OPTIONS.claudeMdStrategy,
 			syncOnSave:
 				(raw.syncOnSave as boolean | undefined) ?? DEFAULT_OPTIONS.syncOnSave,
 		},

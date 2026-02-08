@@ -13,7 +13,6 @@ export {
 	rulesPath,
 } from "./config.js";
 export type {
-	ClaudeMdStrategy,
 	ExportOptions,
 	ExportResult,
 	ExportStrategy,
