@@ -64,7 +64,6 @@ const agentSelectedRule: Rule = {
 const configOptions: RulixConfigOptions = {
 	tokenEstimation: "heuristic",
 	agentsMdHeader: true,
-	claudeMdStrategy: "concatenate",
 	syncOnSave: false,
 };
 
@@ -177,13 +176,12 @@ describe("RulixConfig", () => {
 describe("TokenBudget", () => {
 	it("has all required fields", () => {
 		const budget: TokenBudget = {
-			maxTokens: 2000,
-			maxInstructions: 150,
+			maxTokens: 4000,
 			warningThreshold: 0.8,
-			source: "HumanLayer research",
+			source: "Claude Code documentation",
 		};
 		expectTypeOf(budget).toMatchTypeOf<TokenBudget>();
-		expect(budget.maxTokens).toBe(2000);
+		expect(budget.maxTokens).toBe(4000);
 		expect(budget.warningThreshold).toBe(0.8);
 	});
 });
@@ -255,7 +253,6 @@ describe("RulixAdapter", () => {
 			}),
 			getTokenBudget: () => ({
 				maxTokens: 10000,
-				maxInstructions: 500,
 				warningThreshold: 0.8,
 				source: "test",
 			}),

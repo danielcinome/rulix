@@ -1,5 +1,5 @@
 /**
- * Validation engine for Rulix rules (V001–V010).
+ * Validation engine for Rulix rules (V001–V012).
  *
  * Each check is a pure function that inspects rules structurally.
  * V006 (token budgets) and V008 (agent-selected support) are deferred
@@ -15,6 +15,8 @@ import type {
 
 const MIN_CONTENT_LENGTH = 20;
 const MAX_CONTENT_LINES = 50;
+const CURSOR_MAX_LINES = 50;
+const CLAUDE_CODE_TOKEN_BUDGET = 4_000;
 
 const VAGUE_PATTERNS: RegExp[] = [
 	/handle .+ properly/i,
@@ -199,6 +201,41 @@ function checkLongContent(rule: Rule): ValidationIssue[] {
 	return [];
 }
 
+// ─── Target-Aware Checks ─────────────────────────────────────────
+
+function checkCursorLineLimit(rule: Rule): ValidationIssue[] {
+	const lineCount = rule.content.split("\n").length;
+	if (lineCount > CURSOR_MAX_LINES) {
+		return [
+			createIssue(
+				"V011",
+				"warning",
+				`Rule "${rule.id}" has ${lineCount} lines — Cursor recommends <${CURSOR_MAX_LINES} lines per .mdc file`,
+				rule.id,
+				"Split into smaller, focused rules",
+			),
+		];
+	}
+	return [];
+}
+
+function checkTotalTokenBudget(rules: Rule[]): ValidationIssue[] {
+	let total = 0;
+	for (const rule of rules) {
+		total += rule.estimatedTokens;
+	}
+	if (total > CLAUDE_CODE_TOKEN_BUDGET) {
+		return [
+			createIssue(
+				"V012",
+				"info",
+				`Total rule tokens (${total}) exceed ${CLAUDE_CODE_TOKEN_BUDGET} — consider reducing to keep Claude responsive`,
+			),
+		];
+	}
+	return [];
+}
+
 // ─── Result Builder ──────────────────────────────────────────────
 
 function buildResult(issues: ValidationIssue[]): ValidationResult {
@@ -212,9 +249,13 @@ function buildResult(issues: ValidationIssue[]): ValidationResult {
 
 // ─── Public API ──────────────────────────────────────────────────
 
-/** Validates rules for structural issues (V001–V005, V007, V009, V010). */
-export function validateRules(rules: Rule[]): ValidationResult {
+/** Validates rules for structural issues (V001–V005, V007, V009–V012). */
+export function validateRules(
+	rules: Rule[],
+	targets?: string[] | undefined,
+): ValidationResult {
 	const issues: ValidationIssue[] = [];
+	const hasCursor = targets?.includes("cursor") === true;
 
 	issues.push(...checkDuplicateIds(rules));
 
@@ -226,7 +267,12 @@ export function validateRules(rules: Rule[]): ValidationResult {
 		issues.push(...checkDefaultCategory(rule));
 		issues.push(...checkGlobSyntax(rule));
 		issues.push(...checkLongContent(rule));
+		if (hasCursor) {
+			issues.push(...checkCursorLineLimit(rule));
+		}
 	}
+
+	issues.push(...checkTotalTokenBudget(rules));
 
 	return buildResult(issues);
 }
