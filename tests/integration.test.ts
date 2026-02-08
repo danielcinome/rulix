@@ -215,52 +215,19 @@ describe("Integration: Claude Code round-trip", () => {
 		await rm(tmp, { recursive: true, force: true });
 	});
 
-	it("should import fixture rules from CLAUDE.md and .claude/rules/", async () => {
-		const result = await claudeCodeAdapter.import(
-			join(FIXTURES, "claude-code"),
-		);
-		expect(result.rules.length).toBeGreaterThanOrEqual(2);
-
-		const ids = result.rules.map((r) => r.id);
-		expect(ids).toContain("testing-conventions");
-		// CLAUDE.md has "TypeScript Conventions" and "Context: Security Review"
-		const hasTs = result.rules.some((r) => r.id === "typescript-conventions");
-		const hasSec = result.rules.some((r) => r.id === "security-review");
-		expect(hasTs).toBe(true);
-		expect(hasSec).toBe(true);
-	});
-
-	it("should detect Context: prefix as agent-selected", async () => {
-		const result = await claudeCodeAdapter.import(
-			join(FIXTURES, "claude-code"),
-		);
-		const security = result.rules.find((r) => r.id === "security-review");
-		expect(security?.scope).toBe("agent-selected");
-	});
-
-	it("should detect .claude/rules/ paths as file-scoped", async () => {
-		const result = await claudeCodeAdapter.import(
-			join(FIXTURES, "claude-code"),
-		);
-		const testing = result.rules.find((r) => r.id === "testing-conventions");
-		expect(testing?.scope).toBe("file-scoped");
-		expect(testing?.globs).toEqual(["**/*.test.ts", "**/*.spec.ts"]);
-	});
-
 	it("should round-trip: export canonical → import → same IR", async () => {
 		const canonical = makeCanonicalRules();
 		await claudeCodeAdapter.export(canonical, tmp, { strategy: "overwrite" });
 
 		const imported = await claudeCodeAdapter.import(tmp);
 
-		// always + agent-selected go to CLAUDE.md, file-scoped to .claude/rules/
 		const byScope = {
 			always: imported.rules.filter((r) => r.scope === "always"),
 			fileScoped: imported.rules.filter((r) => r.scope === "file-scoped"),
 			agentSelected: imported.rules.filter((r) => r.scope === "agent-selected"),
 		};
 
-		expect(byScope.always.length).toBeGreaterThanOrEqual(1);
+		expect(byScope.always).toHaveLength(1);
 		expect(byScope.fileScoped).toHaveLength(1);
 		expect(byScope.agentSelected).toHaveLength(1);
 
@@ -274,17 +241,33 @@ describe("Integration: Claude Code round-trip", () => {
 		const agentSel = byScope.agentSelected[0];
 		const canonAgentSel = canonical.find((r) => r.scope === "agent-selected");
 		expect(agentSel?.content).toBe(canonAgentSel?.content);
+		expect(agentSel?.description).toBe(canonAgentSel?.description);
 	});
 
-	it("should generate CLAUDE.md with correct section headers", async () => {
+	it("should export all scopes to .claude/rules/", async () => {
 		const canonical = makeCanonicalRules();
 		await claudeCodeAdapter.export(canonical, tmp, { strategy: "overwrite" });
 
-		const content = await readFile(join(tmp, "CLAUDE.md"), "utf-8");
-		expect(content).toContain("## Enforce strict TypeScript conventions");
-		expect(content).toContain(
-			"## Context: Security guidelines for sensitive code",
+		const result = await claudeCodeAdapter.export(canonical, tmp, {
+			strategy: "overwrite",
+		});
+		expect(result.filesWritten).toHaveLength(3);
+		for (const file of result.filesWritten) {
+			expect(file).toMatch(/^\.claude\/rules\//);
+		}
+	});
+
+	it("should never generate CLAUDE.md", async () => {
+		const canonical = makeCanonicalRules();
+		const result = await claudeCodeAdapter.export(canonical, tmp, {
+			strategy: "overwrite",
+		});
+
+		expect(result.filesWritten).not.toContain("CLAUDE.md");
+		const claudeMd = await readFile(join(tmp, "CLAUDE.md"), "utf-8").catch(
+			() => null,
 		);
+		expect(claudeMd).toBeNull();
 	});
 });
 
@@ -322,19 +305,17 @@ describe("Integration: AGENTS.md export", () => {
 		await agentsMdAdapter.export(canonical, tmp, { strategy: "overwrite" });
 
 		const content = await readFile(join(tmp, "AGENTS.md"), "utf-8");
-		// Only always + file-scoped are exported: style (always) and testing (file-scoped)
 		expect(content).toContain("## Style");
 		expect(content).toContain("## Testing");
+		expect(content).toContain("## Security");
 	});
 
-	it("should exclude agent-selected rules from AGENTS.md", async () => {
+	it("should include all scopes in AGENTS.md", async () => {
 		const canonical = makeCanonicalRules();
 		await agentsMdAdapter.export(canonical, tmp, { strategy: "overwrite" });
 
 		const content = await readFile(join(tmp, "AGENTS.md"), "utf-8");
-		// The agent-selected "Security guidelines" rule content should NOT appear
-		// but the file-scoped security rule from "testing" category should be there
-		expect(content).not.toContain("Security guidelines for sensitive code");
+		expect(content).toContain("Security guidelines for sensitive code");
 	});
 
 	it("should order categories by CATEGORY_ORDER", async () => {
@@ -342,12 +323,15 @@ describe("Integration: AGENTS.md export", () => {
 		await agentsMdAdapter.export(canonical, tmp, { strategy: "overwrite" });
 
 		const content = await readFile(join(tmp, "AGENTS.md"), "utf-8");
-		// Style comes before Testing in CATEGORY_ORDER
+		// Style comes before Security in CATEGORY_ORDER, Security before Testing
 		const styleIdx = content.indexOf("## Style");
+		const securityIdx = content.indexOf("## Security");
 		const testingIdx = content.indexOf("## Testing");
 		expect(styleIdx).toBeGreaterThan(-1);
+		expect(securityIdx).toBeGreaterThan(-1);
 		expect(testingIdx).toBeGreaterThan(-1);
-		expect(styleIdx).toBeLessThan(testingIdx);
+		expect(styleIdx).toBeLessThan(securityIdx);
+		expect(securityIdx).toBeLessThan(testingIdx);
 	});
 });
 
@@ -377,7 +361,7 @@ describe("Integration: cross-adapter sync", () => {
 		});
 
 		expect(cursorResult.filesWritten).toHaveLength(3);
-		expect(claudeResult.filesWritten.length).toBeGreaterThanOrEqual(2);
+		expect(claudeResult.filesWritten).toHaveLength(3);
 		expect(agentsResult.filesWritten).toHaveLength(1);
 	});
 

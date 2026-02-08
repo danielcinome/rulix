@@ -127,7 +127,7 @@ describe("export", () => {
 		expect(highIdx).toBeLessThan(lowIdx);
 	});
 
-	it("includes always and file-scoped rules, excludes agent-selected", async () => {
+	it("includes all scopes in output", async () => {
 		const rules = [
 			makeRule({ id: "always", scope: "always", description: "Always" }),
 			makeRule({
@@ -147,16 +147,7 @@ describe("export", () => {
 		const content = await readFile(join(tmpDir, "AGENTS.md"), "utf-8");
 		expect(content).toContain("### Always");
 		expect(content).toContain("### Scoped");
-		expect(content).not.toContain("### Agent");
-	});
-
-	it("does not write file when no exportable rules", async () => {
-		const rules = [
-			makeRule({ id: "agent", scope: "agent-selected", description: "Agent" }),
-		];
-		const result = await agentsMdAdapter.export(rules, tmpDir);
-
-		expect(result.filesWritten).toHaveLength(0);
+		expect(content).toContain("### Agent");
 	});
 
 	it("supports dry run without writing", async () => {

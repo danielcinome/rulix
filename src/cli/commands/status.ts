@@ -56,6 +56,19 @@ export async function statusCommand(projectRoot: string): Promise<void> {
 		);
 	}
 
+	if (rules.length > 0) {
+		blank();
+		log("  Rules:");
+		const sorted = [...rules].sort((a, b) => a.priority - b.priority);
+		for (const rule of sorted) {
+			const lineCount = rule.content.split("\n").length;
+			const warn = lineCount > 50 ? `  ${color.yellow("⚠")}` : "";
+			log(
+				`    ${rule.id.padEnd(24)} ${`(${rule.scope})`.padEnd(18)} ${String(rule.estimatedTokens).padStart(5)} tokens  ${String(lineCount).padStart(4)} lines${warn}`,
+			);
+		}
+	}
+
 	blank();
 	log("  Token budgets:");
 	const targets =

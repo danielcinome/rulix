@@ -75,12 +75,9 @@ function buildCategorySection(category: RuleCategory, rules: Rule[]): string {
 }
 
 function buildAgentsMdContent(rules: Rule[], includeHeader: boolean): string {
-	const exportable = rules.filter(
-		(r) => r.scope === "always" || r.scope === "file-scoped",
-	);
-	if (exportable.length === 0) return "";
+	if (rules.length === 0) return "";
 
-	const groups = groupByCategory(exportable);
+	const groups = groupByCategory(rules);
 	const sections: string[] = [];
 
 	for (const category of CATEGORY_ORDER) {
@@ -134,7 +131,6 @@ export const agentsMdAdapter: RulixAdapter = {
 	getTokenBudget(): TokenBudget {
 		return {
 			maxTokens: 32_768,
-			maxInstructions: 0,
 			warningThreshold: 0.8,
 			source: "AGENTS.md convention",
 		};

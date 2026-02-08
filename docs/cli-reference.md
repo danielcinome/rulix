@@ -64,10 +64,12 @@ rulix import --from claude-code
 - `description` only maps to `scope: agent-selected`
 - Legacy `.cursorrules` is imported with a deprecation warning
 
-**From Claude Code** (`CLAUDE.md` + `.claude/rules/*.md`):
-- H2 sections in `CLAUDE.md` map to `scope: always`
-- `## Context: X` sections map to `scope: agent-selected`
-- `.claude/rules/*.md` with `paths:` frontmatter map to `scope: file-scoped`
+**From Claude Code** (`.claude/rules/*.md`):
+- Files without frontmatter map to `scope: always`
+- Files with `description:` frontmatter (no `paths:`) map to `scope: agent-selected`
+- Files with `paths:` frontmatter map to `scope: file-scoped`
+
+> **Note**: CLAUDE.md is not imported. Rulix reads only from `.claude/rules/`.
 
 Imported rules are written to `.rulix/rules/{id}.md`. Review them after import — you may want to adjust IDs, scopes, or categories.
 
@@ -116,7 +118,7 @@ rulix sync --dry-run
 | Target | Output |
 |---|---|
 | Cursor | `.cursor/rules/*.mdc` |
-| Claude Code | `CLAUDE.md` + `.claude/rules/*.md` |
+| Claude Code | `.claude/rules/*.md` |
 | AGENTS.md | `AGENTS.md` |
 
 The `overwrite` strategy removes stale files (rules that no longer exist in `.rulix/rules/`) from target directories.
@@ -143,6 +145,8 @@ rulix validate
 | V007 | Info | No specific category assigned |
 | V009 | Error | Invalid glob syntax |
 | V010 | Warning | Overly long content (> 50 lines) |
+| V011 | Warning | Rule exceeds 50 lines (Cursor target only) |
+| V012 | Info | Total rule tokens exceed 4,000 |
 
 Exits with code 1 if any errors are found. Warnings and info messages don't affect the exit code.
 
@@ -159,6 +163,7 @@ rulix status
 ### Output includes
 
 - **Rule count** by scope (always, file-scoped, agent-selected)
+- **Per-rule detail** — each rule with its estimated tokens, line count, and a warning indicator for rules exceeding 50 lines
 - **Token budget usage** per configured target tool
 - **Budget warnings** when usage exceeds 80% of a tool's limit
 - **Configured targets** from `config.json`

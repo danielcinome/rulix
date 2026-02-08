@@ -373,8 +373,7 @@ describe("export", () => {
 describe("getTokenBudget", () => {
 	it("returns Cursor token budget", () => {
 		const budget = cursorAdapter.getTokenBudget();
-		expect(budget.maxTokens).toBe(10_000);
-		expect(budget.maxInstructions).toBe(500);
+		expect(budget.maxTokens).toBe(5_000);
 		expect(budget.warningThreshold).toBe(0.8);
 	});
 });

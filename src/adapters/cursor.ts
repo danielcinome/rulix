@@ -354,8 +354,7 @@ export const cursorAdapter: RulixAdapter = {
 
 	getTokenBudget(): TokenBudget {
 		return {
-			maxTokens: 10_000,
-			maxInstructions: 500,
+			maxTokens: 5_000,
 			warningThreshold: 0.8,
 			source: "Cursor documentation",
 		};

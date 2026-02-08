@@ -34,7 +34,7 @@ Every AI coding tool has its own rules format:
 | Tool | Format | Location |
 |---|---|---|
 | Cursor | `.mdc` with YAML frontmatter | `.cursor/rules/` |
-| Claude Code | Plain markdown | `CLAUDE.md` + `.claude/rules/` |
+| Claude Code | Markdown with optional frontmatter | `.claude/rules/` |
 | AGENTS.md | Plain markdown | `AGENTS.md` |
 | Windsurf | Markdown | `.windsurf/rules/` |
 | Copilot | Markdown | `.github/copilot-instructions.md` |
@@ -43,7 +43,7 @@ If you use more than one tool, you're maintaining duplicate rules that drift apa
 
 ```
 .rulix/rules/              .cursor/rules/*.mdc
-  ├── typescript.md    →   CLAUDE.md + .claude/rules/
+  ├── typescript.md    →   .claude/rules/*.md
   ├── testing.md       →   AGENTS.md
   └── security.md      →   (more targets coming)
 ```
@@ -190,7 +190,6 @@ Rulix is configured via `.rulix/config.json`:
   "options": {
     "tokenEstimation": "heuristic",
     "agentsMdHeader": true,
-    "claudeMdStrategy": "concatenate",
     "syncOnSave": false
   }
 }

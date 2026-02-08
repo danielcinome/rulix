@@ -251,9 +251,13 @@ Calculates budget usage percentage and exceeded flag.
 import { validateRules } from "rulix";
 ```
 
-#### `validateRules(rules)`
+#### `validateRules(rules, targets?)`
 
-Validates an array of rules for structural issues (V001-V010).
+Validates an array of rules for structural issues (V001-V012).
+
+**Parameters:**
+- `rules: Rule[]` — Rules to validate
+- `targets?: string[]` — Optional adapter names. Enables target-specific checks (e.g. V011 for Cursor)
 
 **Returns:** `ValidationResult`
 
@@ -309,7 +313,6 @@ import type {
   ValidationIssue,
   ValidationSeverity,
   Result,
-  ClaudeMdStrategy,
   TokenEstimation,
 } from "rulix";
 ```
